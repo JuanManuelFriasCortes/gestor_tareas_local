@@ -16,8 +16,18 @@ class Tareas extends Table {
 @DriftDatabase(tables: [Tareas])
 class BaseDatos extends _$BaseDatos {
   // Sin argumento abre la base del dispositivo; las pruebas pasan una en memoria.
+  // En web usa sqlite3.wasm y drift_worker.js de la carpeta web/.
   BaseDatos([QueryExecutor? conexion])
-      : super(conexion ?? driftDatabase(name: 'gestor_tareas'));
+      : super(
+          conexion ??
+              driftDatabase(
+                name: 'gestor_tareas',
+                web: DriftWebOptions(
+                  sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+                  driftWorker: Uri.parse('drift_worker.js'),
+                ),
+              ),
+        );
 
   @override
   int get schemaVersion => 1;
