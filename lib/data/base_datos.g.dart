@@ -181,16 +181,18 @@ abstract class _$BaseDatos extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [tareas];
 }
 
-typedef $$TareasTableCreateCompanionBuilder = TareasCompanion Function({
-  Value<int> id,
-  required String titulo,
-  Value<bool> completada,
-});
-typedef $$TareasTableUpdateCompanionBuilder = TareasCompanion Function({
-  Value<int> id,
-  Value<String> titulo,
-  Value<bool> completada,
-});
+typedef $$TareasTableCreateCompanionBuilder =
+    TareasCompanion Function({
+      Value<int> id,
+      required String titulo,
+      Value<bool> completada,
+    });
+typedef $$TareasTableUpdateCompanionBuilder =
+    TareasCompanion Function({
+      Value<int> id,
+      Value<String> titulo,
+      Value<bool> completada,
+    });
 
 class $$TareasTableFilterComposer extends Composer<_$BaseDatos, $TareasTable> {
   $$TareasTableFilterComposer({
@@ -288,11 +290,16 @@ class $$TareasTableTableManager
               $$TareasTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$TareasTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            Value<String> titulo = const Value.absent(),
-            Value<bool> completada = const Value.absent(),
-          }) => TareasCompanion(id: id, titulo: titulo, completada: completada),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> titulo = const Value.absent(),
+                Value<bool> completada = const Value.absent(),
+              }) => TareasCompanion(
+                id: id,
+                titulo: titulo,
+                completada: completada,
+              ),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),

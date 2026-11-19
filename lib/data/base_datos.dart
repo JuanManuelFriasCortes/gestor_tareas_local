@@ -5,8 +5,7 @@ import '../models/tarea.dart';
 
 part 'base_datos.g.dart';
 
-/// Tabla `tareas`. @UseRowClass hace que Drift devuelva cada fila
-/// directamente como el modelo [Tarea] que ya venía en el proyecto.
+// Tabla tareas. Drift devuelve cada fila como el modelo Tarea.
 @UseRowClass(Tarea)
 class Tareas extends Table {
   IntColumn get id => integer().autoIncrement()();
@@ -16,28 +15,34 @@ class Tareas extends Table {
 
 @DriftDatabase(tables: [Tareas])
 class BaseDatos extends _$BaseDatos {
-  /// Sin argumentos abre la base persistente del dispositivo.
-  /// Las pruebas pasan otra conexión (por ejemplo, una base en memoria).
-  BaseDatos([QueryExecutor? conexion]) : super(conexion ?? _abrirConexion());
+  // Sin argumento abre la base del dispositivo; las pruebas pasan una en memoria.
+  BaseDatos([QueryExecutor? conexion])
+      : super(conexion ?? driftDatabase(name: 'gestor_tareas'));
 
   @override
   int get schemaVersion => 1;
 
-  static QueryExecutor _abrirConexion() {
-    return driftDatabase(name: 'gestor_tareas');
-  }
+  Stream<List<Tarea>> observarTareas() => select(tareas).watch();
 
-  /// SELECT reactivo: emite la lista otra vez cada que la tabla cambia.
-  Stream<List<Tarea>> observarTareas() {
-    return (select(tareas)..orderBy([(t) => OrderingTerm.asc(t.id)])).watch();
-  }
+  Future<void> agregarTarea(String titulo) =>
+      into(tareas).insert(TareasCompanion.insert(titulo: validar(titulo)));
 
-  /// INSERT. Rechaza títulos vacíos o hechos solo de espacios.
-  Future<int> agregarTarea(String titulo) {
-    final limpio = titulo.trim();
-    if (limpio.isEmpty) {
+  Future<void> editarTitulo(int id, String titulo) =>
+      (update(tareas)..where((t) => t.id.equals(id)))
+          .write(TareasCompanion(titulo: Value(validar(titulo))));
+
+  Future<void> cambiarEstado(int id, bool completada) =>
+      (update(tareas)..where((t) => t.id.equals(id)))
+          .write(TareasCompanion(completada: Value(completada)));
+
+  Future<void> eliminarTarea(int id) =>
+      (delete(tareas)..where((t) => t.id.equals(id))).go();
+
+  // Rechaza títulos vacíos o solo con espacios.
+  static String validar(String titulo) {
+    if (titulo.trim().isEmpty) {
       throw ArgumentError('El título no puede estar vacío');
     }
-    return into(tareas).insert(TareasCompanion.insert(titulo: limpio));
+    return titulo.trim();
   }
 }

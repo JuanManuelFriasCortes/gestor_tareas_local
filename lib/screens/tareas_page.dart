@@ -22,43 +22,63 @@ class _TareasPageState extends State<TareasPage> {
   @override
   void initState() {
     super.initState();
-    // La consulta se hace aquí y no en build(): el Stream avisa cada que
-    // la tabla cambia y solo entonces se redibuja la lista.
+    // Se consulta aquí y no en build(): el Stream avisa cuando la tabla cambia.
     _suscripcion = widget.baseDatos.observarTareas().listen(
       (tareas) => setState(() => _tareas = tareas),
-      onError: (Object e) {
-        debugPrint('Error al consultar tareas: $e');
-        _mostrarMensaje('No se pudieron cargar las tareas');
-      },
+      onError: (_) => _mostrarMensaje('No se pudieron cargar las tareas'),
     );
   }
 
-  Future<void> _agregarTarea() async {
-    try {
-      await widget.baseDatos.agregarTarea(_tituloController.text);
-      _tituloController.clear();
-    } on ArgumentError catch (e) {
-      _mostrarMensaje(e.message as String);
-    } catch (e) {
-      debugPrint('Error al guardar tarea: $e');
-      _mostrarMensaje('No se pudo guardar la tarea');
-    }
+  void _agregarTarea() {
+    _guardar(() => widget.baseDatos.agregarTarea(_tituloController.text));
+    _tituloController.clear();
   }
 
   void _alternarCompletada(Tarea tarea, bool completada) {
-    _pendiente('Implementar actualización de tarea');
+    _guardar(() => widget.baseDatos.cambiarEstado(tarea.id, completada));
   }
 
-  void _editarTarea(Tarea tarea) {
-    _pendiente('Implementar edición de título');
+  Future<void> _editarTarea(Tarea tarea) async {
+    String titulo = tarea.titulo;
+    final nuevoTitulo = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Editar tarea'),
+        content: TextFormField(
+          initialValue: tarea.titulo,
+          autofocus: true,
+          onChanged: (valor) => titulo = valor,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, titulo),
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+    if (nuevoTitulo != null) {
+      _guardar(() => widget.baseDatos.editarTitulo(tarea.id, nuevoTitulo));
+    }
   }
 
   void _eliminarTarea(Tarea tarea) {
-    _pendiente('Implementar eliminación de tarea');
+    _guardar(() => widget.baseDatos.eliminarTarea(tarea.id));
   }
 
-  void _pendiente(String mensaje) {
-    _mostrarMensaje(mensaje);
+  // Ejecuta una operación de la base y avisa si algo falla.
+  Future<void> _guardar(Future<void> Function() operacion) async {
+    try {
+      await operacion();
+    } on ArgumentError catch (e) {
+      _mostrarMensaje(e.message);
+    } catch (_) {
+      _mostrarMensaje('No se pudo guardar el cambio');
+    }
   }
 
   void _mostrarMensaje(String mensaje) {
@@ -120,7 +140,10 @@ class _TareasPageState extends State<TareasPage> {
                               },
                             ),
                             title: Text(tarea.titulo),
-                            subtitle: Text('ID: ${tarea.id}'),
+                            subtitle: Text(
+                              'ID: ${tarea.id} · '
+                              '${tarea.completada ? 'Completada' : 'Pendiente'}',
+                            ),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
