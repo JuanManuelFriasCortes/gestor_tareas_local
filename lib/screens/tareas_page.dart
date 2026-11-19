@@ -1,10 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import '../data/base_datos.dart';
 import '../models/tarea.dart';
 
-// Pantalla base SIN persistencia ni operaciones CRUD implementadas.
-// Conserva las indicaciones TODO para orientar tu trabajo.
 class TareasPage extends StatefulWidget {
-  const TareasPage({super.key});
+  const TareasPage({super.key, required this.baseDatos});
+
+  final BaseDatos baseDatos;
 
   @override
   State<TareasPage> createState() => _TareasPageState();
@@ -12,17 +15,34 @@ class TareasPage extends StatefulWidget {
 
 class _TareasPageState extends State<TareasPage> {
   final TextEditingController _tituloController = TextEditingController();
+  StreamSubscription<List<Tarea>>? _suscripcion;
 
   List<Tarea> _tareas = [];
 
   @override
   void initState() {
     super.initState();
-
+    // La consulta se hace aquí y no en build(): el Stream avisa cada que
+    // la tabla cambia y solo entonces se redibuja la lista.
+    _suscripcion = widget.baseDatos.observarTareas().listen(
+      (tareas) => setState(() => _tareas = tareas),
+      onError: (Object e) {
+        debugPrint('Error al consultar tareas: $e');
+        _mostrarMensaje('No se pudieron cargar las tareas');
+      },
+    );
   }
 
-  void _agregarTarea() {
-    _pendiente('Implementar registro de tarea');
+  Future<void> _agregarTarea() async {
+    try {
+      await widget.baseDatos.agregarTarea(_tituloController.text);
+      _tituloController.clear();
+    } on ArgumentError catch (e) {
+      _mostrarMensaje(e.message as String);
+    } catch (e) {
+      debugPrint('Error al guardar tarea: $e');
+      _mostrarMensaje('No se pudo guardar la tarea');
+    }
   }
 
   void _alternarCompletada(Tarea tarea, bool completada) {
@@ -38,6 +58,11 @@ class _TareasPageState extends State<TareasPage> {
   }
 
   void _pendiente(String mensaje) {
+    _mostrarMensaje(mensaje);
+  }
+
+  void _mostrarMensaje(String mensaje) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(mensaje)),
     );
@@ -45,6 +70,9 @@ class _TareasPageState extends State<TareasPage> {
 
   @override
   void dispose() {
+    // Liberar recursos: dejar de escuchar el Stream y cerrar la base.
+    _suscripcion?.cancel();
+    widget.baseDatos.close();
     _tituloController.dispose();
     super.dispose();
   }
