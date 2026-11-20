@@ -14,12 +14,13 @@ flutter pub get
 flutter test
 flutter run -d chrome
 flutter run -d windows
-flutter run -d <id del celular>
+flutter run -d <celular>
 
-Para web, la carpeta web/ ya trae sqlite3.wasm y drift_worker.js, descargados del release drift-2.35.4 de GitHub (la misma versión de drift que usa el proyecto).
+Para web, la carpeta web/ ya trae sqlite3.wasm y drift_worker.js, descargados.
 Para Windows hace falta Visual Studio con "Desarrollo para el escritorio con C++" y correr el comando desde una terminal de administrador o con el Modo de desarrollador activado.
 
 Plataformas probadas: Android (Samsung Galaxy A55), Windows 11 y Chrome.
+Plataformas previstas sin probar: iOS, macOS y Linux (usan el mismo código, pero se compilan en Mac y en Linux).
 
 Pruebas P1 a P6: pasaron en las tres plataformas (P6 solo aplica a web, probada en Chrome en http://localhost:8080).
 

@@ -140,10 +140,7 @@ class _TareasPageState extends State<TareasPage> {
                               },
                             ),
                             title: Text(tarea.titulo),
-                            subtitle: Text(
-                              'ID: ${tarea.id} · '
-                              '${tarea.completada ? 'Completada' : 'Pendiente'}',
-                            ),
+                            subtitle: Text('ID: ${tarea.id}'),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
